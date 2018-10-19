@@ -113,6 +113,32 @@ func matMul_thr_unw(n int, m1 Matrix, m2 Matrix) Matrix {
 //	close(isFin)
 	return mat
 }
+// ikj_loop, block
+func matMul_only_block (n int, m1 Matrix, m2 Matrix) Matrix {
+	BLOCK := 50
+	mat := make(Matrix, n)
+	for i := 0; i < n; i++ {
+		mat[i] = make([]float64, n)
+	}
+	for i := 0; i < n; i+=BLOCK {
+		for j := 0; j < n; j+=BLOCK {
+			for k := 0; k < n; k+=BLOCK {
+				ib := i + BLOCK
+				jb := j + BLOCK
+				kb := k + BLOCK
+				for ii := i; ii < ib; ii++ {
+					for jj := j; jj < jb; jj++ {
+						tmp_v := m1[ii][jj]
+						for kk := k; kk < kb; kk++ {
+							mat[ii][kk] += tmp_v * m2[jj][kk]
+						}
+					}
+				}
+			}
+		}
+	}
+	return mat
+}
 
 // ikj_loop, block and used thread
 func matMul_block (n int, m1 Matrix, m2 Matrix) Matrix {
@@ -156,7 +182,7 @@ func matMul_block (n int, m1 Matrix, m2 Matrix) Matrix {
 
 // ikj_loop, block, loop unwinding and used thread
 func matMul_unw (n int, m1 Matrix, m2 Matrix) Matrix {
-	BLOCK := 50
+	BLOCK := 100
 	mat := make(Matrix, n)
 	for i := 0; i < n; i++ {
 		mat[i] = make([]float64, n)
@@ -217,8 +243,20 @@ func main() {
 	//printMat(n, m2)
 
 	st := time.Now()
-	var _ = matMul_thr(n, m1, m2)
+	var _ = matMul_ikj_loop(n, m1, m2)
 	et := time.Now()
+	fmt.Println("thr_ikj_loop")
+	fmt.Println(et.Sub(st))
+
+	st = time.Now()
+	var _ = matMul_only_block(n, m1, m2)
+	et = time.Now()
+	fmt.Println("thr_only_block")
+	fmt.Println(et.Sub(st))
+
+	st = time.Now()
+	var _ = matMul_thr(n, m1, m2)
+	et = time.Now()
 	fmt.Println("thr")
 	fmt.Println(et.Sub(st))
 
@@ -227,8 +265,8 @@ func main() {
 	et = time.Now()
 	fmt.Println("thr_unw")
 	fmt.Println(et.Sub(st))
-	st = time.Now()
 
+	st = time.Now()
 	var _ = matMul_unw(n, m1, m2)
 	et = time.Now()
 	fmt.Println("thr_blo_unw")
