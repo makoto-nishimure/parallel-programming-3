@@ -14,7 +14,10 @@ typedef pair<int,int> point;
 
 #define BASE 700
 
+#ifdef TIME
 double mtime = 0;
+double set_z = 0;
+#endif 
 
 double elapsed_time(struct timeval tp[2])
 {
@@ -23,9 +26,17 @@ double elapsed_time(struct timeval tp[2])
 
 void set_zero(int size, mat& matrix)
 {
+#ifdef TIME
+	struct timeval tp[2];
+	gettimeofday(tp, 0);
+#endif
 	for (int i = 0; i < size; ++i)
 		for (int j = 0; j < size; ++j)
 			matrix[i][j] = 0;
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	set_z += elapsed_time(tp);
+#endif
 }
 
 void print_pair(int size, point pa)
@@ -378,8 +389,8 @@ int main (int argc, char **argv)
 {
 	mat m1, m2, m3;
 	mat m4;
-	int n = 1504;
-	int N = 1504;
+	int n = 1600;
+	int N = 1600;
 	m1 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	m2 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	m3 = (double **)_mm_malloc(sizeof(double*)*N, 64);
@@ -420,17 +431,22 @@ int main (int argc, char **argv)
 	int roop = 10;
 	gettimeofday(tp, 0);
 	for (int i = 0; i < roop; ++i) {
-		str(0, n, m1, m2, m3);
 		set_zero(n, m3);
+		str(0, n, m1, m2, m3);
 	}
 	gettimeofday(tp+1, 0);
 	//cout << "STR DONE" << endl;
-	cout << double(elapsed_time(tp))/roop <<endl;;
+	double one_exe_time = double(elapsed_time(tp)) / roop;
+	cout << one_exe_time <<endl;;
 #ifdef TIME
-	cout << mtime <<endl;
-	cout << mtime/ double(elapsed_time(tp))<<endl;;
+	cout << "malloc and free TIME" <<endl;
+	cout << mtime / roop <<endl;
+	cout << (mtime / roop) / one_exe_time <<endl;;
+	cout << "set zero TIME" <<endl;
+	cout << set_z / roop <<endl;
+	cout << (set_z / roop) / one_exe_time <<endl;
 #endif
-	//print_mat(n, m3);
+	print_mat(n, m3);
 
 	/*
 		 gettimeofday(tp, 0);
