@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <immintrin.h>
 #include <cassert>
+#include <thread>
 
 using namespace std;
 typedef double* arr;
@@ -16,8 +17,12 @@ typedef pair<int,int> point;
 
 #ifdef TIME
 double mtime = 0;
-double set_z = 0;
+double mmtime = 0;
 #endif 
+int b_size = 50;
+
+void str(int, int, const mat, const mat, mat&);
+void _str(int, int, const mat, const mat, mat&);
 
 double elapsed_time(struct timeval tp[2])
 {
@@ -26,17 +31,9 @@ double elapsed_time(struct timeval tp[2])
 
 void set_zero(int size, mat& matrix)
 {
-#ifdef TIME
-	struct timeval tp[2];
-	gettimeofday(tp, 0);
-#endif
 	for (int i = 0; i < size; ++i)
 		for (int j = 0; j < size; ++j)
 			matrix[i][j] = 0;
-#ifdef TIME
-	gettimeofday(tp+1, 0);
-	set_z += elapsed_time(tp);
-#endif
 }
 
 void print_pair(int size, point pa)
@@ -46,6 +43,23 @@ void print_pair(int size, point pa)
 }
 
 void matAdd(int size, point pa, point pb,
+		const mat mat_a, const mat mat_b, mat& mat_c)
+{
+	assert(size % 4 == 0);
+#ifdef DEBUG
+	cout << "ADD" <<endl;
+	print_pair(size, pa);
+	print_pair(size, pb);
+#endif
+	int i, j;
+	for (i = 0; i < size; ++i) {
+		for (j = 0; j < size; ++j) {
+			mat_c[i][j] =  mat_a[i][j] + mat_b[i][j];
+		}
+	}
+}
+
+void simd_matAdd(int size, point pa, point pb,
 		const mat mat_a, const mat mat_b, mat& mat_c)
 {
 	assert(size % 4 == 0);
@@ -73,6 +87,23 @@ void matAdd(int size, point pa, point pb,
 }
 
 void matSub(int size, point pa, point pb,
+		const mat mat_a, const mat mat_b, mat& mat_c)
+{
+	assert(size % 4 == 0);
+#ifdef DEBUG
+	cout << "SUB" <<endl;
+	print_pair(size, pa);
+	print_pair(size, pb);
+#endif
+	int i, j;
+	for (i = 0; i < size; ++i) {
+		for (j = 0; j < size; ++j) {
+			mat_c[i][j] = mat_a[i][j] + mat_b[i][j];
+		}
+	}
+}
+
+void simd_matSub(int size, point pa, point pb,
 		const mat mat_a, const mat mat_b, mat& mat_c)
 {
 	assert(size % 4 == 0);
@@ -104,110 +135,133 @@ void matCopy(int size, point p, const mat from, mat& to)
 	int tmp;
 	for (int i = 0; i < size; ++i) {
 		tmp = i + p.first;
-		for (int j = 0; j < size; ++j)
+		for (int j = 0; j < size; ++j) {
 			to[i][j] = from[tmp][j+p.second];
+		}
 	}
 }
 
 void matMul(int size,
 		const mat mat_a, const mat mat_b, mat& mat_c)
 {
-	assert(size % 4 == 0);
+#ifdef TIME
+	struct timeval tp[2];
+	gettimeofday(tp, 0);
+#endif
+	assert(size % 8 == 0);
+
+	int i, j, k;
+	int ii, jj, kk;
+	double tmp;
+
+	for (ii = 0; ii < size; ii+=b_size) {
+		int i_limit = (ii + b_size < size) ? ii + b_size : size;
+		for (kk = 0; kk < size; kk+=b_size) {
+			int k_limit = (kk + b_size < size) ? kk + b_size : size;
+			for (jj = 0; jj < size; jj+=b_size) {
+				int j_limit = (jj + b_size < size) ? jj + b_size : size;
+
+				for (i = ii; i < i_limit; ++i) {
+					for (k = kk; k < k_limit; ++k) {
+						tmp = mat_a[i][k];
+						for (j = jj; j < j_limit; ++j) {
+							mat_c[i][j] += tmp * mat_b[k][j];
+						}
+					}
+				}
+			}
+		}
+	}
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	mmtime += (double)elapsed_time(tp);
+#endif
+}
+
+void simd_matMul(int size,
+		const mat mat_a, const mat mat_b, mat& mat_c)
+{
+#ifdef TIME
+	struct timeval tp[2];
+	gettimeofday(tp, 0);
+#endif
+	assert(size % 8 == 0);
 	const int end = size >> 2;
 
 	int i, j, k;
 	double tmp;
 	for (i = 0; i < size; ++i) {
 		__m256d* c = (__m256d*)mat_c[i];
+
 		for (k = 0; k < size; ++k) {
 			__m256d* b = (__m256d*)mat_b[k];
 			tmp = mat_a[i][k];	
-			const __m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
+			__m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
+
 			for (j = 0; j < end; ++j) {
+				c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+				++j;
 				c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
 			}
 		}
 	}
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	mmtime += (double)elapsed_time(tp);
+#endif
 }
 
-void str(int d, int size,
+void block_matMul(int size,
 		const mat mat_a, const mat mat_b, mat& mat_c)
 {
+#ifdef TIME
 	struct timeval tp[2];
-#ifdef DEBUG
-	for (int i = 0; i < d; ++i)
-		cout << "\t";
-	cout << "STR START. SIZE:" << size <<endl;
+	gettimeofday(tp, 0);
 #endif
-	if (size <= BASE) {
-		matMul(size, mat_a, mat_b, mat_c);
-#ifdef DEBUG
-		for (int i = 0; i < d; ++i)
-			cout << "\t";
-		cout << "matMul DONE. SIZE:" << size <<endl;
-#endif
-		return;
-	}
-	int i, j, k, mid;
-	mid = size >> 1;
+	assert(size % 8 == 0);
+	const int end = size >> 2;
 
+	int i, j, k;
+	int ii, jj, kk;
+	double tmp;
+
+	for (ii = 0; ii < size; ii+=b_size) {
+		int i_limit = (ii + b_size < size) ? ii + b_size : size;
+		for (kk = 0; kk < size; kk+=b_size) {
+			int k_limit = (kk + b_size < size) ? kk + b_size : size;
+
+			for (i = ii; i < i_limit; ++i) {
+				__m256d* c = (__m256d*)mat_c[i];
+
+				for (k = kk; k < k_limit; ++k) {
+					__m256d* b = (__m256d*)mat_b[k];
+					tmp = mat_a[i][k];	
+					__m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
+
+					for (j = 0; j < end; ++j) {
+						c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+						++j;
+						c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+					}
+				}
+			}
+		}
+	}
+
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	mmtime += (double)elapsed_time(tp);
+#endif
+}
+
+void m1to4(int d, int mid, mat mat_a, mat mat_b,
+		mat x, mat y, mat m1, mat m2, mat m3, mat m4)
+{
 	point p0, p1, p2, p3;
 	p0 = make_pair(0,0);
 	p1 = make_pair(0,mid);
 	p2 = make_pair(mid,0);
 	p3 = make_pair(mid,mid);
-	mat m1, m2, m3, m4, m5, m6, m7, x, y;
-	
-#ifdef TIME
-	gettimeofday(tp, 0);
-#endif
-	m1 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m2 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m3 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m4 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m5 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m6 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m7 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	for (i = 0; i < mid; ++i) {
-		m1[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m2[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m3[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m4[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m5[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m6[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m7[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-	}
-#ifdef TIME
-	gettimeofday(tp+1, 0);
-	mtime += (double)elapsed_time(tp);
-#endif
-	/*
-		 m1 = (double**)calloc(mid, sizeof(double*)); 
-		 m2 = (double**)calloc(mid, sizeof(double*));
-		 m3 = (double**)calloc(mid, sizeof(double*));
-		 m4 = (double**)calloc(mid, sizeof(double*));
-		 m5 = (double**)calloc(mid, sizeof(double*));
-		 m6 = (double**)calloc(mid, sizeof(double*));
-		 m7 = (double**)calloc(mid, sizeof(double*));
-		 x = (double**)calloc(mid, sizeof(double*));
-		 y = (double**)calloc(mid, sizeof(double*));
-		 for (i = 0; i < mid; ++i) {
-		 m1[i] = (double*)calloc(mid, sizeof(double)); 
-		 m2[i] = (double*)calloc(mid, sizeof(double));
-		 m3[i] = (double*)calloc(mid, sizeof(double));
-		 m4[i] = (double*)calloc(mid, sizeof(double));
-		 m5[i] = (double*)calloc(mid, sizeof(double));
-		 m6[i] = (double*)calloc(mid, sizeof(double));
-		 m7[i] = (double*)calloc(mid, sizeof(double));
-		 x[i] = (double*)calloc(mid, sizeof(double));
-		 y[i] = (double*)calloc(mid, sizeof(double));
-		 }
-		 */
-
 	// M1
 	matAdd(mid, p0, p3, mat_a, mat_a, x);
 	matAdd(mid, p0, p3, mat_b, mat_b, y);
@@ -251,6 +305,16 @@ void str(int d, int size,
 		cout << "\t";
 	cout << "M4 FINISHED" <<endl;
 #endif
+}
+
+void m5to7(int d, int mid, mat mat_a, mat mat_b,
+		mat x, mat y, mat m5, mat m6, mat m7)
+{
+	point p0, p1, p2, p3;
+	p0 = make_pair(0,0);
+	p1 = make_pair(0,mid);
+	p2 = make_pair(mid,0);
+	p3 = make_pair(mid,mid);
 
 	// M5
 	matAdd(mid, p0, p1, mat_a, mat_a, x);
@@ -284,6 +348,67 @@ void str(int d, int size,
 		cout << "\t";
 	cout << "M7 FINISHED" <<endl;
 #endif
+}
+
+void str(int d, int size,
+		const mat mat_a, const mat mat_b, mat& mat_c)
+{
+	struct timeval tp[2];
+#ifdef DEBUG
+	for (int i = 0; i < d; ++i)
+		cout << "\t";
+	cout << "STR START. SIZE:" << size <<endl;
+#endif
+	if (size <= BASE) {
+		//block_matMul(size, mat_a, mat_b, mat_c);
+		matMul(size, mat_a, mat_b, mat_c);
+#ifdef DEBUG
+		for (int i = 0; i < d; ++i)
+			cout << "\t";
+		cout << "matMul DONE. SIZE:" << size <<endl;
+#endif
+		return;
+	}
+	int i, j, k, mid;
+	mid = size >> 1;
+	point p0, p1, p2, p3;
+	p0 = make_pair(0,0);
+	p1 = make_pair(0,mid);
+	p2 = make_pair(mid,0);
+	p3 = make_pair(mid,mid);
+
+	mat m1, m2, m3, m4, m5, m6, m7, x, y;
+
+#ifdef TIME
+	gettimeofday(tp, 0);
+#endif
+	m1 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m2 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m3 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m4 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m5 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m6 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m7 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	for (i = 0; i < mid; ++i) {
+		m1[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m2[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m3[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m4[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m5[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m6[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m7[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+	}
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	mtime += (double)elapsed_time(tp);
+#endif
+
+	m1to4(d, mid, mat_a, mat_b, x, y, m1, m2, m3, m4);
+	m5to7(d, mid, mat_a, mat_b, x, y, m5, m6, m7);
 
 	// C1 and C2
 	// C1
@@ -300,16 +425,6 @@ void str(int d, int size,
 		for (j = 0, tmp_m = mid; j < mid; ++j, ++tmp_m)
 			mat_c[i][tmp_m] = x[i][j];
 
-//	int tmp_n, tmp_m;
-//	for (i = 0; i < mid; ++i) {
-//		// C1
-//		for (j = 0; j < mid; ++j)
-//			mat_c[i][j] = m1[i][j] + m4[i][j] - m5[i][j] + m7[i][j];
-//		// C2
-//		for (j = 0, tmp_m = mid; j < mid; ++j, ++tmp_m) {
-//			mat_c[i][tmp_m] = m3[i][j] + m5[i][j];
-//		}
-//	}
 #ifdef DEBUG
 	for (int i = 0; i < d; ++i)
 		cout << "\t";
@@ -329,17 +444,148 @@ void str(int d, int size,
 	for (i = 0, tmp_n = mid; i < mid; ++i, ++tmp_n)
 		for (j = 0, tmp_m = mid; j < mid; ++j, ++tmp_m)
 			mat_c[tmp_n][tmp_m] = x[i][j];
-	
-//	for (i = 0, tmp_n = mid; i < mid; ++i, ++tmp_n) {
-//		// C3
-//		for (j = 0; j < mid; ++j) {
-//			mat_c[tmp_n][j] = m2[i][j] + m4[i][j];
-//		}
-//		// C4
-//		for (j = 0, tmp_m = mid; j < mid; ++j, ++tmp_m) {
-//			mat_c[tmp_n][tmp_m] = m1[i][j] - m2[i][j] + m3[i][j] + m6[i][j];
-//		}
-//	}
+
+#ifdef DEBUG
+	for (int i = 0; i < d; ++i)
+		cout << "\t";
+	cout << "C3 AND C4  FINISHED" <<endl;
+	cout << "MID:" << mid <<endl;
+#endif
+#ifdef TIME
+	gettimeofday(tp, 0);
+#endif
+	for (i = 0; i < mid; ++i) {
+		_mm_free(m1[i]); 
+		_mm_free(m2[i]);
+		_mm_free(m3[i]);
+		_mm_free(m4[i]);
+		_mm_free(m5[i]);
+		_mm_free(m6[i]);
+		_mm_free(m7[i]);
+		_mm_free(x[i]);
+		_mm_free(y[i]);
+	}
+	_mm_free(m1); 
+	_mm_free(m2);
+	_mm_free(m3);
+	_mm_free(m4);
+	_mm_free(m5);
+	_mm_free(m6);
+	_mm_free(m7);
+	_mm_free(x);
+	_mm_free(y);
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	mtime += (double)elapsed_time(tp);
+#endif
+}
+
+void sub(int d, int mid, mat mat_a, mat mat_b,
+		mat m5, mat m6, mat m7)
+{
+	int i;
+	mat x, y;
+	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	for (i = 0; i < mid; ++i) {
+		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+	}
+	m5to7(d, mid, mat_a, mat_b, x, y, m5, m6, m7);
+	for (i = 0; i < mid; ++i) {
+		_mm_free(x[i]);
+		_mm_free(y[i]);
+	}
+	_mm_free(x);
+	_mm_free(y);
+}
+
+
+void _str(int d, int size,
+		const mat mat_a, const mat mat_b, mat& mat_c)
+{
+	struct timeval tp[2];
+#ifdef DEBUG
+	for (int i = 0; i < d; ++i)
+		cout << "\t";
+	cout << "STR START. SIZE:" << size <<endl;
+#endif
+	int i, j, k, mid;
+	mid = size >> 1;
+	point p0, p1, p2, p3;
+	p0 = make_pair(0,0);
+	p1 = make_pair(0,mid);
+	p2 = make_pair(mid,0);
+	p3 = make_pair(mid,mid);
+	mat m1, m2, m3, m4, m5, m6, m7, x, y;
+
+#ifdef TIME
+	gettimeofday(tp, 0);
+#endif
+	m1 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m2 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m3 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m4 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m5 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m6 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	m7 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	for (i = 0; i < mid; ++i) {
+		m1[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m2[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m3[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m4[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m5[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m6[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m7[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+	}
+#ifdef TIME
+	gettimeofday(tp+1, 0);
+	mtime += (double)elapsed_time(tp);
+#endif
+
+	thread t(sub, d, mid, ref(mat_a), ref(mat_b), ref(m5), ref(m6), ref(m7)); 
+	m1to4(d, mid, mat_a, mat_b, x, y, m1, m2, m3, m4);
+	t.join();
+
+	// C1 and C2
+	// C1
+	int tmp_n, tmp_m;
+	matAdd(mid, p0, p0, m1, m4, x);
+	matSub(mid, p0, p0, x, m5, y);
+	matAdd(mid, p0, p0, y, m7, x);
+	for (i = 0; i < mid; ++i)
+		for (j = 0; j < mid; ++j)
+			mat_c[i][j] = x[i][j];
+	// C2
+	matAdd(mid, p0, p0, m3, m5, x);
+	for (i = 0; i < mid; ++i)
+		for (j = 0, tmp_m = mid; j < mid; ++j, ++tmp_m)
+			mat_c[i][tmp_m] = x[i][j];
+
+#ifdef DEBUG
+	for (int i = 0; i < d; ++i)
+		cout << "\t";
+	cout << "C1 AND C2  FINISHED" <<endl;
+#endif
+	// C3 and C4
+	// C3
+	matAdd(mid, p0, p0, m2, m4, x);
+	for (i = 0, tmp_n = mid; i < mid; ++i, ++tmp_n) 
+		for (j = 0; j < mid; ++j)
+			mat_c[tmp_n][j] = x[i][j];
+
+	// C4
+	matSub(mid, p0, p0, m1, m2, x);
+	matAdd(mid, p0, p0, x, m3, y);
+	matAdd(mid, p0, p0, y, m6, x);
+	for (i = 0, tmp_n = mid; i < mid; ++i, ++tmp_n)
+		for (j = 0, tmp_m = mid; j < mid; ++j, ++tmp_m)
+			mat_c[tmp_n][tmp_m] = x[i][j];
+
 #ifdef DEBUG
 	for (int i = 0; i < d; ++i)
 		cout << "\t";
@@ -388,85 +634,50 @@ void print_mat(int size, mat m)
 int main (int argc, char **argv)
 {
 	mat m1, m2, m3;
-	mat m4;
-	int n = 1600;
-	int N = 1600;
+	int n = 1504;
+	int N = 1504;
 	m1 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	m2 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	m3 = (double **)_mm_malloc(sizeof(double*)*N, 64);
-	m4 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	for (int i = 0; i < N; ++i) {
 		m1[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
 		m2[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
 		m3[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
-		m4[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
 	}
-	/*
-		 m1 = (double **)calloc(N, sizeof(double*)); 
-		 m2 = (double **)calloc(N, sizeof(double*));
-		 m3 = (double **)calloc(N, sizeof(double*));
-		 m4 = (double **)calloc(N, sizeof(double*));
-		 for (int i = 0; i < N; ++i) {
-		 m1[i] = (double *)calloc(N, sizeof(double)); 
-		 m2[i] = (double *)calloc(N, sizeof(double));
-		 m3[i] = (double *)calloc(N, sizeof(double));
-		 m4[i] = (double *)calloc(N, sizeof(double));
-		 }
-		 */
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < n; ++j) {
 			m1[i][j] = ((i + j) * 100 / 7.0);
 			m2[i][j] = ((i + j) * 300 / 7.0);
 		}
 	}
-	set_zero(n, m3);
-	set_zero(n, m4);
 	struct timeval tp[2];
-
-	//matAdd(n, make_pair(0, 0), make_pair(0, 0), m1, m2, m3);
-	//print_mat(n, m3);
-	//_matAdd(n, make_pair(0, 0), make_pair(0, 0), m1, m2, m4);
-	//print_mat(n, m4);
-
-	int roop = 10;
+	int roop = 30;
 	gettimeofday(tp, 0);
 	for (int i = 0; i < roop; ++i) {
 		set_zero(n, m3);
-		str(0, n, m1, m2, m3);
+		_str(0, n, m1, m2, m3);
 	}
 	gettimeofday(tp+1, 0);
 	//cout << "STR DONE" << endl;
 	double one_exe_time = double(elapsed_time(tp)) / roop;
 	cout << one_exe_time <<endl;;
+	//print_mat(n, m3);
 #ifdef TIME
 	cout << "malloc and free TIME" <<endl;
 	cout << mtime / roop <<endl;
 	cout << (mtime / roop) / one_exe_time <<endl;;
-	cout << "set zero TIME" <<endl;
-	cout << set_z / roop <<endl;
-	cout << (set_z / roop) / one_exe_time <<endl;
+	cout << "MM TIME" << endl;
+	cout << mmtime / (2 * roop) <<endl;
+	cout << (mmtime / (2 * roop)) / one_exe_time <<endl;
 #endif
-	print_mat(n, m3);
-
-	/*
-		 gettimeofday(tp, 0);
-		 for (int i = 0; i < roop; ++i) {
-		 matMul(n, m1, m2, m4);
-		 }
-		 gettimeofday(tp+1, 0);
-		 cout << double(elapsed_time(tp))/roop <<endl;;
-		 */
-	//print_mat(n, m4);	
 
 	for (int i = 0; i < N; ++i) {
 		_mm_free(m1[i]);
 		_mm_free(m2[i]);
 		_mm_free(m3[i]);
-		_mm_free(m4[i]);
 	}
 	_mm_free(m1);
 	_mm_free(m2);
 	_mm_free(m3);
-	_mm_free(m4);
 	return 0;
 }
