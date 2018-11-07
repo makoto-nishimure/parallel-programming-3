@@ -246,6 +246,7 @@ void str(int d, int size,
 	p3 = make_pair(mid,mid);
 
 	mat m1, m2, m3, m4, m5, m6, m7, x, y;
+	double *a1, *a2, *a3, *a4, *a5, *a6, *a7, *ax, *ay;
 
 #ifdef TIME
 	gettimeofday(tp, 0);
@@ -257,18 +258,29 @@ void str(int d, int size,
 	m5 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
 	m6 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
 	m7 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	x  = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	y  = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+
+	a1 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a2 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a3 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a4 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a5 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a6 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a7 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	ax = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	ay = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+
 	for (i = 0; i < mid; ++i) {
-		m1[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m2[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m3[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m4[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m5[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m6[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m7[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m1[i] = &a1[i * mid];
+		m2[i] = &a2[i * mid];
+		m3[i] = &a3[i * mid];
+		m4[i] = &a4[i * mid];
+		m5[i] = &a5[i * mid];
+		m6[i] = &a6[i * mid];
+		m7[i] = &a7[i * mid];
+		x[i]  = &ax[i * mid];
+		y[i]  = &ay[i * mid];
 	}
 #ifdef TIME
 	gettimeofday(tp+1, 0);
@@ -322,17 +334,27 @@ void str(int d, int size,
 #ifdef TIME
 	gettimeofday(tp, 0);
 #endif
-	for (i = 0; i < mid; ++i) {
-		_mm_free(m1[i]); 
-		_mm_free(m2[i]);
-		_mm_free(m3[i]);
-		_mm_free(m4[i]);
-		_mm_free(m5[i]);
-		_mm_free(m6[i]);
-		_mm_free(m7[i]);
-		_mm_free(x[i]);
-		_mm_free(y[i]);
-	}
+//	for (i = 0; i < mid; ++i) {
+//		_mm_free(m1[i]); 
+//		_mm_free(m2[i]);
+//		_mm_free(m3[i]);
+//		_mm_free(m4[i]);
+//		_mm_free(m5[i]);
+//		_mm_free(m6[i]);
+//		_mm_free(m7[i]);
+//		_mm_free(x[i]);
+//		_mm_free(y[i]);
+//	}
+	_mm_free(a1); 
+	_mm_free(a2); 
+	_mm_free(a3); 
+	_mm_free(a4); 
+	_mm_free(a5); 
+	_mm_free(a6); 
+	_mm_free(a7); 
+	_mm_free(ax); 
+	_mm_free(ay); 
+
 	_mm_free(m1); 
 	_mm_free(m2);
 	_mm_free(m3);
@@ -353,17 +375,22 @@ void sub(int d, int mid, mat mat_a, mat mat_b,
 {
 	int i;
 	mat x, y;
+	double *ax, *ay;
 	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
 	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+	ax = (double*)_mm_malloc(sizeof(double)*mid*mid, 64);
+	ay = (double*)_mm_malloc(sizeof(double)*mid*mid, 64);
 	for (i = 0; i < mid; ++i) {
-		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		x[i] = &ax[i * mid];
+		y[i] = &ay[i * mid];
 	}
 	m5to7(d, mid, mat_a, mat_b, x, y, m5, m6, m7);
-	for (i = 0; i < mid; ++i) {
-		_mm_free(x[i]);
-		_mm_free(y[i]);
-	}
+//	for (i = 0; i < mid; ++i) {
+//		_mm_free(x[i]);
+//		_mm_free(y[i]);
+//	}
+	_mm_free(ax);
+	_mm_free(ay);
 	_mm_free(x);
 	_mm_free(y);
 }
@@ -385,6 +412,7 @@ void _str(int d, int size,
 	p2 = make_pair(mid,0);
 	p3 = make_pair(mid,mid);
 	mat m1, m2, m3, m4, m5, m6, m7, x, y;
+	double *a1, *a2, *a3, *a4, *a5, *a6, *a7, *ax, *ay;
 
 #ifdef TIME
 	gettimeofday(tp, 0);
@@ -398,16 +426,26 @@ void _str(int d, int size,
 	m7 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
 	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
 	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
+
+	a1 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a2 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a3 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a4 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a5 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a6 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	a7 = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	ax = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
+	ay = (double*)_mm_malloc(sizeof(double)*mid * mid, 64);
 	for (i = 0; i < mid; ++i) {
-		m1[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m2[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m3[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m4[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m5[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m6[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m7[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
+		m1[i] = &a1[i * mid];
+		m2[i] = &a2[i * mid];
+		m3[i] = &a3[i * mid];
+		m4[i] = &a4[i * mid];
+		m5[i] = &a5[i * mid];
+		m6[i] = &a6[i * mid];
+		m7[i] = &a7[i * mid];
+		x[i] = &ax[i * mid];
+		y[i] = &ay[i * mid];
 	}
 #ifdef TIME
 	gettimeofday(tp+1, 0);
@@ -462,17 +500,27 @@ void _str(int d, int size,
 #ifdef TIME
 	gettimeofday(tp, 0);
 #endif
-	for (i = 0; i < mid; ++i) {
-		_mm_free(m1[i]); 
-		_mm_free(m2[i]);
-		_mm_free(m3[i]);
-		_mm_free(m4[i]);
-		_mm_free(m5[i]);
-		_mm_free(m6[i]);
-		_mm_free(m7[i]);
-		_mm_free(x[i]);
-		_mm_free(y[i]);
-	}
+//	for (i = 0; i < mid; ++i) {
+//		_mm_free(m1[i]); 
+//		_mm_free(m2[i]);
+//		_mm_free(m3[i]);
+//		_mm_free(m4[i]);
+//		_mm_free(m5[i]);
+//		_mm_free(m6[i]);
+//		_mm_free(m7[i]);
+//		_mm_free(x[i]);
+//		_mm_free(y[i]);
+//	}
+	_mm_free(a1); 
+	_mm_free(a2);
+	_mm_free(a3);
+	_mm_free(a4);
+	_mm_free(a5);
+	_mm_free(a6);
+	_mm_free(a7);
+	_mm_free(ax);
+	_mm_free(ay);
+
 	_mm_free(m1); 
 	_mm_free(m2);
 	_mm_free(m3);

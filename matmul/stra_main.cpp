@@ -4,16 +4,24 @@
 
 int main (int argc, char **argv)
 {
-	mat m1, m2, m3;
 	int n = 1504;
 	int N = 1504;
+
+	mat m1, m2, m3;
+	double *p1, *p2, *p3;
 	m1 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	m2 = (double **)_mm_malloc(sizeof(double*)*N, 64);
 	m3 = (double **)_mm_malloc(sizeof(double*)*N, 64);
+	p1 = (double *)_mm_malloc(sizeof(double*)*N*N, 64);
+	p2 = (double *)_mm_malloc(sizeof(double*)*N*N, 64);
+	p3 = (double *)_mm_malloc(sizeof(double*)*N*N, 64);
 	for (int i = 0; i < N; ++i) {
-		m1[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
-		m2[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
-		m3[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
+		//m1[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
+		//m2[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
+		//m3[i] = (double *)_mm_malloc(sizeof(double)*N, 64);
+		m1[i] = &p1[i * N];
+		m2[i] = &p2[i * N];
+		m3[i] = &p3[i * N];
 	}
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < n; ++j) {
@@ -42,11 +50,15 @@ int main (int argc, char **argv)
 	cout << (mmtime / (2 * roop)) / one_exe_time <<endl;
 #endif
 
-	for (int i = 0; i < N; ++i) {
-		_mm_free(m1[i]);
-		_mm_free(m2[i]);
-		_mm_free(m3[i]);
-	}
+//	for (int i = 0; i < N; ++i) {
+//		_mm_free(m1[i]);
+//		_mm_free(m2[i]);
+//		_mm_free(m3[i]);
+//	}
+	_mm_free(p1);
+	_mm_free(p2);
+	_mm_free(p3);
+
 	_mm_free(m1);
 	_mm_free(m2);
 	_mm_free(m3);
