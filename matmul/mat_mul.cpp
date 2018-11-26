@@ -8,6 +8,28 @@ double mmtime = 0;
 #endif 
 int block_size = 200;
 
+typedef struct {
+	mat m;
+	arr a;
+} adds;
+
+adds* allocMat(int row, int column)
+{
+	adds *p;
+	p = (adds*)malloc(sizeof(adds));
+	p->m = (double**)_mm_malloc(sizeof(double*)*column, 64);
+	p->a = (double*)_mm_malloc(sizeof(double)*row*column, 64);
+	for (int i = 0; i < column; ++i)
+		p->m[i] = p->a + i * row;
+	return p;
+}
+
+void freeMat(adds *p)
+{
+	_mm_free(ad->m);
+	_mm_free(ad->a);
+	free(p);
+}
 
 void matMul(int size,
 		const mat mat_a, const mat mat_b, mat& mat_c)
@@ -128,57 +150,34 @@ void str(int d, int size,
 	p2 = make_pair(mid,0);
 	p3 = make_pair(mid,mid);
 	mat m1, m2, m3, m4, m5, m6, m7, x, y;
+	adds *ad1, *ad2, *ad3, *ad4, *ad5, *ad6, *ad7, *adx, *ady;
 
 #ifdef TIME
 	gettimeofday(tp, 0);
 #endif
-	m1 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m2 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m3 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m4 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m5 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m6 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	m7 = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	x = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	y = (double**)_mm_malloc(sizeof(double*)*mid, 64);
-	for (i = 0; i < mid; ++i) {
-		m1[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m2[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m3[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m4[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m5[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m6[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		m7[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		x[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-		y[i] = (double*)_mm_malloc(sizeof(double)*mid, 64);
-	}
+	ad1 = alloc_mat(N, N);
+	ad2 = alloc_mat(N, N);
+	ad3 = alloc_mat(N, N);
+	ad4 = alloc_mat(N, N);
+	ad5 = alloc_mat(N, N);
+	ad6 = alloc_mat(N, N);
+	ad7 = alloc_mat(N, N);
+	adx = alloc_mat(N, N);
+	ady = alloc_mat(N, N);
+	m1 = ad1->m;
+	m2 = ad2->m;
+	m3 = ad3->m;
+	m4 = ad4->m;
+	m5 = ad5->m;
+	m6 = ad6->m;
+	m7 = ad7->m;
+	x = adx->m;
+	y = ady->m;
+
 #ifdef TIME
 	gettimeofday(tp+1, 0);
 	mtime += (double)elapsed_time(tp);
 #endif
-	/*
-		 m1 = (double**)calloc(mid, sizeof(double*)); 
-		 m2 = (double**)calloc(mid, sizeof(double*));
-		 m3 = (double**)calloc(mid, sizeof(double*));
-		 m4 = (double**)calloc(mid, sizeof(double*));
-		 m5 = (double**)calloc(mid, sizeof(double*));
-		 m6 = (double**)calloc(mid, sizeof(double*));
-		 m7 = (double**)calloc(mid, sizeof(double*));
-		 x = (double**)calloc(mid, sizeof(double*));
-		 y = (double**)calloc(mid, sizeof(double*));
-		 for (i = 0; i < mid; ++i) {
-		 m1[i] = (double*)calloc(mid, sizeof(double)); 
-		 m2[i] = (double*)calloc(mid, sizeof(double));
-		 m3[i] = (double*)calloc(mid, sizeof(double));
-		 m4[i] = (double*)calloc(mid, sizeof(double));
-		 m5[i] = (double*)calloc(mid, sizeof(double));
-		 m6[i] = (double*)calloc(mid, sizeof(double));
-		 m7[i] = (double*)calloc(mid, sizeof(double));
-		 x[i] = (double*)calloc(mid, sizeof(double));
-		 y[i] = (double*)calloc(mid, sizeof(double));
-		 }
-		 */
-
 	// M1
 	matAdd(mid, p0, p3, mat_a, mat_a, x);
 	matAdd(mid, p0, p3, mat_b, mat_b, y);
@@ -320,26 +319,36 @@ void str(int d, int size,
 #ifdef TIME
 	gettimeofday(tp, 0);
 #endif
-	for (i = 0; i < mid; ++i) {
-		_mm_free(m1[i]); 
-		_mm_free(m2[i]);
-		_mm_free(m3[i]);
-		_mm_free(m4[i]);
-		_mm_free(m5[i]);
-		_mm_free(m6[i]);
-		_mm_free(m7[i]);
-		_mm_free(x[i]);
-		_mm_free(y[i]);
-	}
-	_mm_free(m1); 
-	_mm_free(m2);
-	_mm_free(m3);
-	_mm_free(m4);
-	_mm_free(m5);
-	_mm_free(m6);
-	_mm_free(m7);
-	_mm_free(x);
-	_mm_free(y);
+	freeMat(ad1);
+	freeMat(ad2);
+	freeMat(ad3);
+	freeMat(ad4);
+	freeMat(ad5);
+	freeMat(ad6);
+	freeMat(ad7);
+	freeMat(adx);
+	freeMat(ady);
+	//for (i = 0; i < mid; ++i) {
+	//	_mm_free(m1[i]); 
+	//	_mm_free(m2[i]);
+	//	_mm_free(m3[i]);
+	//	_mm_free(m4[i]);
+	//	_mm_free(m5[i]);
+	//	_mm_free(m6[i]);
+	//	_mm_free(m7[i]);
+	//	_mm_free(x[i]);
+	//	_mm_free(y[i]);
+	//}
+	//_mm_free(m1); 
+	//_mm_free(m2);
+	//_mm_free(m3);
+	//_mm_free(m4);
+	//_mm_free(m5);
+	//_mm_free(m6);
+	//_mm_free(m7);
+	//_mm_free(x);
+	//_mm_free(y);
+
 	gettimeofday(tp+1, 0);
 #ifdef TIME
 	mtime += (double)elapsed_time(tp);
