@@ -26,8 +26,8 @@ adds* allocMat(int row, int column)
 
 void freeMat(adds *p)
 {
-	_mm_free(ad->m);
-	_mm_free(ad->a);
+	_mm_free(p->m);
+	_mm_free(p->a);
 	free(p);
 }
 
@@ -155,15 +155,15 @@ void str(int d, int size,
 #ifdef TIME
 	gettimeofday(tp, 0);
 #endif
-	ad1 = alloc_mat(N, N);
-	ad2 = alloc_mat(N, N);
-	ad3 = alloc_mat(N, N);
-	ad4 = alloc_mat(N, N);
-	ad5 = alloc_mat(N, N);
-	ad6 = alloc_mat(N, N);
-	ad7 = alloc_mat(N, N);
-	adx = alloc_mat(N, N);
-	ady = alloc_mat(N, N);
+	ad1 = allocMat(mid, mid);
+	ad2 = allocMat(mid, mid);
+	ad3 = allocMat(mid, mid);
+	ad4 = allocMat(mid, mid);
+	ad5 = allocMat(mid, mid);
+	ad6 = allocMat(mid, mid);
+	ad7 = allocMat(mid, mid);
+	adx = allocMat(mid, mid);
+	ady = allocMat(mid, mid);
 	m1 = ad1->m;
 	m2 = ad2->m;
 	m3 = ad3->m;
