@@ -1,6 +1,7 @@
-#include "mm.hpp"
+//#include "mm.hpp"
 #include "mat_mul.hpp"
 #include "mm_opt.hpp"
+
 
 int main (int argc, char **argv)
 {
@@ -21,7 +22,6 @@ int main (int argc, char **argv)
 			m2[i][j] = ((i + j) * 300 / 7.0);
 		}
 	}
-
 	struct timeval tp[2];
 	int roop = 10;
 	gettimeofday(tp, 0);

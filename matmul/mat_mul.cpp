@@ -6,12 +6,7 @@
 double mtime = 0;
 double mmtime = 0;
 #endif 
-int block_size = 200;
-
-typedef struct {
-	mat m;
-	arr a;
-} adds;
+int block_size = 60;
 
 adds* allocMat(int row, int column)
 {
@@ -97,16 +92,26 @@ void tb_Mul(int size, int thr_s, int thr_e,
 
 			for (i = ii; i < i_limit; ++i) {
 				__m256d* c = (__m256d*)mat_c[i];
+				__m256d* d = (__m256d*)mat_c[i+1];
+
 				for (k = kk; k < k_limit; ++k) {
 					__m256d* b = (__m256d*)mat_b[k];
+					
 					tmp = mat_a[i][k];	
 					const __m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
+
+					tmp = mat_a[i+1][k];
+					const __m256d beta = _mm256_set_pd(tmp, tmp, tmp, tmp);
+
 					for (j = 0; j < end; ++j) {
 						c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+						d[j] = _mm256_fmadd_pd(beta, b[j], d[j]);
 						++j;
 						c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+						d[j] = _mm256_fmadd_pd(beta, b[j], d[j]);
 					}
 				}
+				++i;
 			}
 		}
 	}
