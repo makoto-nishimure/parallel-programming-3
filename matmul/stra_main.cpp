@@ -33,7 +33,7 @@ int main (int argc, char **argv)
 	//cout << "STR DONE" << endl;
 	double one_exe_time = double(elapsed_time(tp)) / roop;
 	cout << one_exe_time <<endl;;
-	print_mat(n, m3);
+	//print_mat(n, m3);
 #ifdef TIME
 	cout << "malloc and free TIME" <<endl;
 	cout << mtime / roop <<endl;

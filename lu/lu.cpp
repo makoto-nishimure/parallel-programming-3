@@ -26,10 +26,10 @@ void naive (int n, mat a)
 		for(k=0;k<i;k++)
 			for(j=k+1;j<n;j++)
 				a[i][j] -= a[i][k] * a[k][j];
+		// reciprocal
+		double rep = a[i][i];
 		for(j=i+1;j<n;j++)
 			a[i][j] /= a[i][i];
-		//	_print_mat(n, a);
-		//	cout << endl;
 	}
 }
 
