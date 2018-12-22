@@ -16,6 +16,8 @@ adds* allocMat(int, int);
 void freeMat(adds *p);
 
 void matMul(int, const mat, const mat, mat&);
+void naive_ma(int size,	const mat x, const arr y, mat& z, const mat w);
+void matarrMul(int, const mat, const arr, mat&);
 void block_Mul(int, const mat, const mat, mat&);
 void tb_Mul(int, int, int, const mat, const mat, mat&);
 

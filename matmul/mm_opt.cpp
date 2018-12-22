@@ -15,7 +15,7 @@ void print_mat(int size, mat m)
 {
 	for (int i = 0; i < size; ++i) {
 		for (int j = 0; j < size; ++j) {
-			cout << m[i][j] << " ";
+			printf("%.5lf ", m[i][j]);
 		}
 		cout << endl;
 	}

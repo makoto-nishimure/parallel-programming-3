@@ -1,6 +1,6 @@
 #include "mat_mul.hpp"
 
-#define BASE 700
+#define BASE 1024
 
 #ifdef TIME
 double mtime = 0;
@@ -39,6 +39,50 @@ void matMul(int size,
 		for (k = 0; k < size; ++k) {
 			__m256d* b = (__m256d*)mat_b[k];
 			tmp = mat_a[i][k];	
+			const __m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
+			for (j = 0; j < end; ++j) {
+				c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+			}
+		}
+	}
+}
+
+void naive_ma(int size,
+		const mat x, const arr y, mat& z, mat w)
+{
+	assert(size % 4 == 0);
+	int h_size = size >> 1;
+	int arr_size = 2 * size - 1;
+
+	int i, j, k;
+	int ar_p;
+	double tmp;
+	for (i = 0; i < h_size; ++i) {
+		for (k = 0, ar_p = arr_size - size; k < size; ++k, ar_p--) {
+			double *b = y + ar_p;
+			tmp = x[i][k];	
+			for (j = 0; j < size; ++j) {
+				z[i][j] += x[i][k] * b[j];
+			}
+		}
+	}
+}
+
+void matarrMul(int size,
+		const mat x, const arr y, mat& z)
+{
+	assert(size % 4 == 0);
+	const int end = size >> 2;
+	int arr_size = 2 * size - 1;
+
+	int i, j, k;
+	int ar_p;
+	double tmp;
+	for (i = 0; i < size; ++i) {
+		__m256d* c = (__m256d*)z[i];
+		for (k = 0, ar_p = arr_size - size; k < size; ++k, ar_p--) {
+			__m256d* b = (__m256d*)(y + ar_p);
+			tmp = x[i][k];	
 			const __m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
 			for (j = 0; j < end; ++j) {
 				c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
