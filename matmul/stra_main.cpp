@@ -90,56 +90,66 @@ void diffmatvec(int n, mat a, arr b)
 
 int main (int argc, char **argv)
 {
-	int n = 16;
-	int N = 16;
+	int n = 1024;
+	int N = 1024;
 
 	adds *mat1, *mat2, *mat3, *mat4, *ar1;
 	mat1 = allocMat(N, N);
-	mat2 = allocMat(N, N);
-	mat3 = allocMat(N, N);
-	mat4 = allocMat(N, N);
 	ar1  = allocMat(1, 2 * N - 1);
+
+	mat3 = allocMat(N, N);
+
+	mat2 = allocMat(N, N);
+	//mat4 = allocMat(N, N);
 
 	mat m1, m2, m3, m4;
 	m1 = mat1->m;
-	m2 = mat2->m;
+
 	m3 = mat3->m;
-	m4 = mat4->m;
+
+	m2 = mat2->m;
+	//m4 = mat4->m;
 
 	arr a1;
 	a1 = ar1->a;
-	diffmatvec(n, m2, a1);
+
 	set_zero(n, m3);
-	set_zero(n, m4);
+	//set_zero(n, m4);
 
 	struct timeval tp[2];
-	int roop = 2;
-	gettimeofday(tp, 0);
-	for (int i = 0; i < roop; ++i) {
-		genmat(n, m1, i + 5);
-		genmat(n, m2, i + 6);
-		genmat2vec(n, a1, i + 6);
-		naive_ma(n, m1, a1, m3, m2);
-		//str(0, n, m1, m2, m3);
-		//matarrMul(n, m1, a1, m3);
-		matMul(n, m1, m2, m4);
-	}
-	gettimeofday(tp+1, 0);
-	//cout << "STR DONE" << endl;
-	double one_exe_time = double(elapsed_time(tp)) / roop;
-	cout << one_exe_time <<endl;;
-	//diff (n, m3, m4);
-	print_mat(n, m3);
+	int roop = 1;
+  genmat(n, m1, 5);
+  genmat(n, m2, 6);
+  genmat2vec(n, a1,6);
+  gettimeofday(tp, 0);
+  for (int i = 0; i < roop; ++i) {
+    //naive_ma(n, m1, a1, m3);
+    //block_ma(n, m1, a1, m3);
+    //str(0, n, m1, m2, m3);
+    //matarrMul(n, m1, a1, m3);
+    //matarrMul_b(n, m1, a1, m3);
+    //matarrMul_l(n, m1, a1, m3);
+    matarrMul_t(n, m1, a1, m3);
+    //matMul(n, m1, m2, m4);
+  }
+  gettimeofday(tp+1, 0);
+  //cout << "STR DONE" << endl;
+  double one_exe_time = double(elapsed_time(tp)) / roop;
+  printf("TIME : %lf\n", one_exe_time);
+  //diff (n, m3, m4);
+  print_mat(n, m3);
 #ifdef TIME
-	cout << "malloc and free TIME" <<endl;
-	cout << mtime / roop <<endl;
-	cout << (mtime / roop) / one_exe_time <<endl;;
-	cout << "set zero TIME" <<endl;
-	cout << set_z / roop <<endl;
-	cout << (set_z / roop) / one_exe_time <<endl;
+  cout << "malloc and free TIME" <<endl;
+  cout << mtime / roop <<endl;
+  cout << (mtime / roop) / one_exe_time <<endl;;
+  cout << "set zero TIME" <<endl;
+  cout << set_z / roop <<endl;
+  cout << (set_z / roop) / one_exe_time <<endl;
 #endif
-	freeMat(mat1);
-	freeMat(mat2);
-	freeMat(mat3);
-	return 0;
+  freeMat(mat1);
+  freeMat(mat3);
+
+  freeMat(mat2);
+  //freeMat(mat4);
+  return 0;
 }

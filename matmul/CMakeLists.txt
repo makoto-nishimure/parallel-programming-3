@@ -5,7 +5,7 @@ project(matmul CXX)
 
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -mavx -mfma")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O3 -D=TIME")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -D=TIME")
 #cmake -DCMAKE_BUILD_TYPE=Debug
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 #cmake -DCMAKE_BUILD_TYPE=Release
