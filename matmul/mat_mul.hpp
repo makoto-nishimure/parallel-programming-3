@@ -22,6 +22,7 @@ void matarrMul_b(int, const mat, const arr, mat&);
 void matarrMul_l(int, const mat, const arr, mat&);
 void matarrMul_t(int, const mat, const arr, mat&);
 void matarrMul_tl(int, int, int, const mat, const arr, mat&);
+void matarrMul_tlb(int, int, int, const mat, const arr, mat&);
 
 void matMul(int, const mat, const mat, mat&);
 void block_Mul(int, const mat, const mat, mat&);

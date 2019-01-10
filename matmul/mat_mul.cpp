@@ -57,7 +57,7 @@ void naive_ma(int size,
 	int i, j, k;
 	int ar_p;
 	double tmp;
-	for (i = 0; i < size; ++i) {
+	for (i = 0; i < h_size; ++i) {
 		for (k = 0, ar_p = arr_size - size; k < size; ++k, ar_p--) {
 			double *b = y + ar_p;
 			tmp = x[i][k];	
@@ -66,6 +66,14 @@ void naive_ma(int size,
 			}
 		}
 	}
+
+  for (i = 0; i < h_size; ++i) {
+    int ii = size - i - 1;
+    for (j = 0; j < size; ++j) {
+      z[ii][size - j - 1] = z[i][j];
+    }
+  }
+
 }
 
 void block_ma(int size,
@@ -123,11 +131,55 @@ void matarrMul_t(int size,
     const mat a, const arr b, mat& c)
 {
   assert(size % 8 == 0);
-  thread t1(matarrMul_tl, size, 0, size >> 1, ref(a), ref(b), ref(c));
-  matarrMul_tl(size, size >> 1, size, ref(a), ref(b), ref(c));
+  
+  thread t1(matarrMul_tlb, size, 0, size >> 1, ref(a), ref(b), ref(c));
+  matarrMul_tlb(size, size >> 1, size, ref(a), ref(b), ref(c));
   t1.join();
 }
 
+void matarrMul_tlb(int size, int thr_start, int thr_end,
+    const mat x, const arr y, mat& z)
+{
+  assert(size % 4 == 0);
+  const int end = size >> 2;
+  //int arr_size = 2 * size - 1;
+  int arr_size = (size << 1) - 1;
+
+  int i, j, k;
+  int ii, kk;
+  int ar_p;
+  double tmp;
+
+  for (ii = thr_start; ii < thr_end; ii+=block_size) {
+    int i_limit = (ii + block_size < thr_end) ? ii + block_size : thr_end;
+    for (kk = 0; kk < size; kk+=block_size) {
+      int k_limit = (kk + block_size < size) ? kk + block_size : size;
+      
+      for (i = ii; i < i_limit; ++i) {
+        __m256d* c = (__m256d*)z[i];
+        __m256d* d = (__m256d*)z[i+1];
+
+        for (k = kk, ar_p = arr_size - size - kk; k < k_limit; ++k, ar_p--) {
+          __m256d* b = (__m256d*)(y + ar_p);
+          tmp = x[i][k];
+          const __m256d alpha = _mm256_set_pd(tmp, tmp, tmp, tmp);
+
+          tmp = x[i+1][k];
+          const __m256d beta = _mm256_set_pd(tmp, tmp, tmp, tmp);
+
+          for (j = 0; j < end; ++j) {
+            c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+            d[j] = _mm256_fmadd_pd(beta, b[j], d[j]);
+            ++j;
+            c[j] = _mm256_fmadd_pd(alpha, b[j], c[j]);
+            d[j] = _mm256_fmadd_pd(beta, b[j], d[j]);
+          }
+        }
+        ++i;
+      }
+    }
+  }
+}
 
 void matarrMul_tl(int size, int thr_start, int thr_end,
     const mat x, const arr y, mat& z)
@@ -169,7 +221,6 @@ void matarrMul_l(int size,
 {
   assert(size % 4 == 0);
   const int end = size >> 2;
-  //int arr_size = 2 * size - 1;
   int arr_size = (size << 1) - 1;
 
   int i, j, k;

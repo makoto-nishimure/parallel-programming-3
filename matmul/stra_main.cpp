@@ -117,12 +117,13 @@ int main (int argc, char **argv)
 	//set_zero(n, m4);
 
 	struct timeval tp[2];
-	int roop = 1;
+	int roop = 10;
   genmat(n, m1, 5);
   genmat(n, m2, 6);
   genmat2vec(n, a1,6);
   gettimeofday(tp, 0);
   for (int i = 0; i < roop; ++i) {
+    //matMul(n, m1, m2, m3);
     //naive_ma(n, m1, a1, m3);
     //block_ma(n, m1, a1, m3);
     //str(0, n, m1, m2, m3);
@@ -130,14 +131,14 @@ int main (int argc, char **argv)
     //matarrMul_b(n, m1, a1, m3);
     //matarrMul_l(n, m1, a1, m3);
     matarrMul_t(n, m1, a1, m3);
-    //matMul(n, m1, m2, m4);
+    //thr_Mul(n, m1, m2, m3);
   }
   gettimeofday(tp+1, 0);
   //cout << "STR DONE" << endl;
   double one_exe_time = double(elapsed_time(tp)) / roop;
   printf("TIME : %lf\n", one_exe_time);
   //diff (n, m3, m4);
-  print_mat(n, m3);
+  //print_mat(n, m3);
 #ifdef TIME
   cout << "malloc and free TIME" <<endl;
   cout << mtime / roop <<endl;
