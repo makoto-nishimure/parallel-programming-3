@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.12.4)
 project(matmul CXX)
 
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -mavx -mfma")
+set(CMAKE_CXX_FLAGS "-std=c++11 -mavx -mfma -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -D=TIME")
 #cmake -DCMAKE_BUILD_TYPE=Debug
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")

@@ -13,5 +13,3 @@ typedef double** mat;
 typedef pair<int,int> point;
 
 extern double mtime;
-extern double set_z;
-

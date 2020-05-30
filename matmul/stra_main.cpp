@@ -4,7 +4,7 @@
 
 void genmat(int n, double** a, int k);
 
-/* ¹ÔÎóÀ¸À®´Ø¿ô */
+/* è¡Œåˆ—ç”Ÿæˆé–¢æ•° */
 void
 genmat(int n, double** a, int k)
 {
@@ -126,11 +126,11 @@ int main (int argc, char **argv)
     //matMul(n, m1, m2, m3);
     //naive_ma(n, m1, a1, m3);
     //block_ma(n, m1, a1, m3);
-    //str(0, n, m1, m2, m3);
+    str(0, n, m1, m2, m3);
     //matarrMul(n, m1, a1, m3);
     //matarrMul_b(n, m1, a1, m3);
     //matarrMul_l(n, m1, a1, m3);
-    matarrMul_t(n, m1, a1, m3);
+    //matarrMul_t(n, m1, a1, m3);
     //thr_Mul(n, m1, m2, m3);
   }
   gettimeofday(tp+1, 0);
@@ -144,8 +144,6 @@ int main (int argc, char **argv)
   cout << mtime / roop <<endl;
   cout << (mtime / roop) / one_exe_time <<endl;;
   cout << "set zero TIME" <<endl;
-  cout << set_z / roop <<endl;
-  cout << (set_z / roop) / one_exe_time <<endl;
 #endif
   freeMat(mat1);
   freeMat(mat3);
