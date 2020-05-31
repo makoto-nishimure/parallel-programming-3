@@ -12,4 +12,3 @@ typedef double *arr;
 typedef double **mat;
 typedef pair<int, int> point;
 
-extern double mtime;

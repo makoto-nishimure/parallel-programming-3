@@ -1,4 +1,4 @@
-//#include "mm.hpp"
+#include "mm.hpp"
 #include "mat_mul.hpp"
 #include "mm_opt.hpp"
 
@@ -81,8 +81,8 @@ void diffmatvec(int n, mat a, arr b) {
 }
 
 int main(int argc, char **argv) {
-  int n = 1024;
-  int N = 1024;
+  int n = 1504;
+  int N = 1504;
 
   adds *mat1, *mat2, *mat3, *mat4, *ar1;
   mat1 = allocMat(N, N);
@@ -130,11 +130,6 @@ int main(int argc, char **argv) {
   printf("TIME : %lf\n", one_exe_time);
   // diff (n, m3, m4);
   // print_mat(n, m3);
-#ifdef TIME
-  cout << "malloc and free TIME" << endl;
-  cout << mtime / roop << endl;
-  cout << (mtime / roop) / one_exe_time << endl;
-#endif
   freeMat(mat1);
   freeMat(mat3);
 

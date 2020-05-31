@@ -2,10 +2,6 @@
 
 #define BASE 1024
 
-#ifdef TIME
-double mtime = 0;
-double mmtime = 0;
-#endif
 int block_size = 60;
 
 adds *allocMat(int row, int column) {
@@ -363,9 +359,6 @@ void str(int d, int size, const mat mat_a, const mat mat_b, mat &mat_c) {
   mat m1, m2, m3, m4, m5, m6, m7, x, y;
   adds *ad1, *ad2, *ad3, *ad4, *ad5, *ad6, *ad7, *adx, *ady;
 
-#ifdef TIME
-  gettimeofday(tp, 0);
-#endif
   ad1 = allocMat(mid, mid);
   ad2 = allocMat(mid, mid);
   ad3 = allocMat(mid, mid);
@@ -385,10 +378,6 @@ void str(int d, int size, const mat mat_a, const mat mat_b, mat &mat_c) {
   x = adx->m;
   y = ady->m;
 
-#ifdef TIME
-  gettimeofday(tp + 1, 0);
-  mtime += (double)elapsed_time(tp);
-#endif
   // M1
   matAdd(mid, p0, p3, mat_a, mat_a, x);
   matAdd(mid, p0, p3, mat_b, mat_b, y);
@@ -508,9 +497,7 @@ void str(int d, int size, const mat mat_a, const mat mat_b, mat &mat_c) {
   cout << "C3 AND C4  FINISHED" << endl;
   cout << "MID:" << mid << endl;
 #endif
-#ifdef TIME
-  gettimeofday(tp, 0);
-#endif
+
   freeMat(ad1);
   freeMat(ad2);
   freeMat(ad3);
@@ -520,8 +507,4 @@ void str(int d, int size, const mat mat_a, const mat mat_b, mat &mat_c) {
   freeMat(ad7);
   freeMat(adx);
   freeMat(ady);
-#ifdef TIME
-  gettimeofday(tp + 1, 0);
-  mtime += (double)elapsed_time(tp);
-#endif
 }

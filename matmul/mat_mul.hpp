@@ -2,11 +2,6 @@
 #include "mm.hpp"
 #include "mm_opt.hpp"
 
-#ifdef TIME
-extern double mtime;
-extern double mmtime;
-#endif
-
 typedef struct {
   mat m;
   arr a;
