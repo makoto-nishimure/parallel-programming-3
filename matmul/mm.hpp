@@ -1,17 +1,14 @@
+#include <cassert>
+#include <immintrin.h>
 #include <iostream>
 #include <stdlib.h>
-#include <utility>
-#include <immintrin.h>
-#include <cassert>
-#include <thread>
 #include <sys/time.h>
+#include <thread>
+#include <utility>
 
 using namespace std;
 
-typedef double* arr;
-typedef double** mat;
-typedef pair<int,int> point;
-
-extern double mtime;
-extern double set_z;
+typedef double *arr;
+typedef double **mat;
+typedef pair<int, int> point;
 
