@@ -7,6 +7,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+void genmat(int n, double **a, int k);
+void genvec(int n, double *a, int k);
+
 int tcp_acc_port(int port);
 int fdopen_sock(int sock, FILE **in, FILE **out);
 

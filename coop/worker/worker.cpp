@@ -90,6 +90,38 @@ void naive(int n, mat a) {
   }
 }
 
+void solveEqL(mat L, double *b, double *y, int size) {
+  int i, j;
+  double tmp;
+
+  for (i = 0; i < size; i++) {
+    tmp = b[i];
+    for (j = 0; j < i; j++) {
+      tmp -= L[i][j] * y[j];
+    }
+    y[i] = tmp / L[i][i];
+  }
+}
+
+void solveEqU(mat U, double *y, double *x, int size) {
+  int i, j;
+  double tmp;
+
+  for (i = size - 1; i >= 0; i--) {
+    tmp = y[i];
+    for (j = size - 1; j > i; j--) {
+      tmp -= U[i][j] * x[j];
+    }
+    x[i] = tmp;
+  }
+}
+
+void solveEq(mat m, double *b, double *x, int size) {
+  double *y = (double *)malloc(sizeof(double) * size);
+  solveEqL(m, b, y, size);
+  solveEqU(m, y, x, size);
+}
+
 int main(int argc, char **argv) {
   char *serv;
   int port;
@@ -136,8 +168,8 @@ int echo_client(char *serv, int port) {
   m1 = adx->m;
   m2 = ady->m;
 
-  double *b = (double *)malloc(sizeof(double) * N); //ベクトルb
-  double *x = (double *)malloc(sizeof(double) * N); //ベクトルx
+  double *b = (double *)malloc(sizeof(double) * max); //ベクトルb
+  double *x = (double *)malloc(sizeof(double) * max); //ベクトルx
 
   for (;;) {
 
