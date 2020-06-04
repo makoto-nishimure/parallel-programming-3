@@ -14,7 +14,7 @@
 #include <thread>
 #include <vector>
 
-#include "server.hpp"
+#include "master.hpp"
 
 #define BUFFERSIZE 1024
 #define BUFLEN 1048576
