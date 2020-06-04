@@ -29,8 +29,8 @@ make
 ```
 
 ## LU分解
-ブロック形式ガウス方のLU分解の実装．
-1500 * 1500ぐらいを目安．
+ブロック形式ガウス方のLU分解の実装。
+実装が間違っていたので一時的に削除。
 
 P.33
 [参考PDF](http://www.cspp.cc.u-tokyo.ac.jp/hanawa/class/spc2016s/sp20160614-2.pdf)
