@@ -1,7 +1,7 @@
 #include "worker.hpp"
-#include "../matmul/mat_etc.hpp"
-#include "../matmul/mat_mul.hpp"
-#include "../matmul/mm.hpp"
+#include "../../matmul/mat_etc.hpp"
+#include "../../matmul/mat_mul.hpp"
+#include "../../matmul/mm.hpp"
 
 int echo_client(char *serv, int port);
 int tcp_connect(char *serv, int port);
