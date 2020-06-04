@@ -29,7 +29,7 @@ void _genmat(int n, mat a, mat b) {
   }
 }
 
-bool isCollect(int size, mat a, mat b) {
+bool isCorrect(int size, mat a, mat b) {
   for (int i = 0; i < size; ++i) {
     for (int j = 0; j < size; ++j) {
       if (a[i][j] != b[i][j]) {
@@ -112,10 +112,9 @@ int main(int argc, char **argv) {
   }
   gettimeofday(tp + 1, 0);
 
-  if (!isCollect(n, m3, m4)) {
-    cout << "MatMul using block is not collect." << endl;
+  if (!isCorrect(n, m3, m4)) {
+    cout << "MatMul using block is not correct." << endl;
   }
-
   one_exe_time = double(elapsed_time(tp)) / roop;
   cout << "MatMul using block." << endl;
   printf("TIME : %lf\n\n", one_exe_time);
@@ -128,8 +127,8 @@ int main(int argc, char **argv) {
   }
   gettimeofday(tp + 1, 0);
 
-  if (!isCollect(n, m3, m4)) {
-    cout << "MatMul using thread and block is not collect." << endl;
+  if (!isCorrect(n, m3, m4)) {
+    cout << "MatMul using thread and block is not correct." << endl;
     cout << m3[0][0] << endl;
     cout << m4[0][0] << endl;
   }
@@ -146,8 +145,8 @@ int main(int argc, char **argv) {
   }
   gettimeofday(tp + 1, 0);
 
-  if (!isCollect(n, m3, m4)) {
-    cout << "Strassen is not collect." << endl;
+  if (!isCorrect(n, m3, m4)) {
+    cout << "Strassen is not correct." << endl;
   }
 
   one_exe_time = double(elapsed_time(tp)) / roop;
