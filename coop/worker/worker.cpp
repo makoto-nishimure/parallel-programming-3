@@ -120,6 +120,7 @@ void solveEq(mat m, double *b, double *x, int size) {
   double *y = (double *)malloc(sizeof(double) * size);
   solveEqL(m, b, y, size);
   solveEqU(m, y, x, size);
+  free(y);
 }
 
 int main(int argc, char **argv) {
