@@ -1,7 +1,7 @@
 #include "worker.hpp"
-#include "../matmul/mat_etc.hpp"
-#include "../matmul/mat_mul.hpp"
-#include "../matmul/mm.hpp"
+#include "../../matmul/mat_etc.hpp"
+#include "../../matmul/mat_mul.hpp"
+#include "../../matmul/mm.hpp"
 
 int echo_client(char *serv, int port);
 int tcp_connect(char *serv, int port);
@@ -90,6 +90,39 @@ void naive(int n, mat a) {
   }
 }
 
+void solveEqL(mat L, double *b, double *y, int size) {
+  int i, j;
+  double tmp;
+
+  for (i = 0; i < size; i++) {
+    tmp = b[i];
+    for (j = 0; j < i; j++) {
+      tmp -= L[i][j] * y[j];
+    }
+    y[i] = tmp / L[i][i];
+  }
+}
+
+void solveEqU(mat U, double *y, double *x, int size) {
+  int i, j;
+  double tmp;
+
+  for (i = size - 1; i >= 0; i--) {
+    tmp = y[i];
+    for (j = size - 1; j > i; j--) {
+      tmp -= U[i][j] * x[j];
+    }
+    x[i] = tmp;
+  }
+}
+
+void solveEq(mat m, double *b, double *x, int size) {
+  double *y = (double *)malloc(sizeof(double) * size);
+  solveEqL(m, b, y, size);
+  solveEqU(m, y, x, size);
+  free(y);
+}
+
 int main(int argc, char **argv) {
   char *serv;
   int port;
@@ -136,10 +169,13 @@ int echo_client(char *serv, int port) {
   m1 = adx->m;
   m2 = ady->m;
 
-  double *b = (double *)malloc(sizeof(double) * N); //ベクトルb
-  double *x = (double *)malloc(sizeof(double) * N); //ベクトルx
+  double *b = (double *)malloc(sizeof(double) * max); //ベクトルb
+  double *x = (double *)malloc(sizeof(double) * max); //ベクトルx
 
   for (;;) {
+    set_zero(max, matrix);
+    set_zero(max, m1);
+    set_zero(max, m2);
 
     //接続先から問題受信
     fscanf(in, "%d", &pi);
@@ -185,11 +221,12 @@ int echo_client(char *serv, int port) {
 
       for (j = 0; j <= tmp; j += 2) {
         fprintf(out, "%.15e\n%.15e\n", x[j], x[j + 1]);
+        fflush(out);
       }
-      fflush(out);
-      for (; j < n; j++)
+      for (; j < n; j++) {
         fprintf(out, "%.15e\n", x[j]);
-      fflush(out);
+        fflush(out);
+      }
     }
   }
   fclose(in);

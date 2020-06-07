@@ -14,7 +14,7 @@
 #include <thread>
 #include <vector>
 
-#include "server.hpp"
+#include "master.hpp"
 
 #define BUFFERSIZE 1024
 #define BUFLEN 1048576
@@ -99,6 +99,7 @@ void create_thr(int port, int worker_num) {
     // last worker
     else {
       fprintf(os, "ready\n");
+      fflush(os);
       expected_replay(is, os, "start");
       START = true;
       each_thr(com);
@@ -183,12 +184,12 @@ void sendAns(int &pi, int &n, int &l, double **x) {
 
     for (j = 0; j <= n - 2; j += 2) {
       fprintf(os, "%.15e\n%.15e\n", x[i][j], x[i][j + 1]);
+      fflush(os);
     }
-    fflush(os);
     for (; j < n; ++j) {
       fprintf(os, "%.15e\n", x[i][j]);
+      fflush(os);
     }
-    fflush(os);
   }
 
   expected_replay(is, os, "score");

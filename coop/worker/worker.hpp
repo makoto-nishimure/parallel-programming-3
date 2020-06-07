@@ -11,5 +11,4 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "genmat-genvec-sample.cpp"
-#include "opt.hpp"
+#include "../opt.hpp"

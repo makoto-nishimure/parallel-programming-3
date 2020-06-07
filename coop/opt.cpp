@@ -1,6 +1,31 @@
 #include "opt.hpp"
+#include <math.h>
+
 #define BUFLEN 1048576
 char msg_buf[BUFLEN];
+
+void genmat(int n, double **a, int k) {
+  int i, j;
+  double d, aij;
+  int nk = n / k;
+  double nk1 = 1. / nk;
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      d = ((n - abs(i - j)) / (double)n) / (abs(i - j) + 1);
+      aij = d * ((nk / 2 - (abs(i - j) % nk)) * nk1 + 1);
+      a[i][j] = (0.1 * aij);
+    }
+    a[i][i] += 1;
+  }
+}
+
+void genvec(int n, double *x, int k) {
+  int i;
+  double dd = 2 * 3.141592653589793238462643383 / n * k;
+  for (i = 0; i < n; i++) {
+    x[i] = ((i % 19) + 1) * (sin(i * dd) + 1.1);
+  }
+}
 
 int tcp_acc_port(int port) {
   struct sockaddr_in addr;
