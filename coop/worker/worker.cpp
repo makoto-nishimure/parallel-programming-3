@@ -172,6 +172,9 @@ int echo_client(char *serv, int port) {
   double *x = (double *)malloc(sizeof(double) * max); //ベクトルx
 
   for (;;) {
+    set_zero(max, matrix);
+    set_zero(max, m1);
+    set_zero(max, m2);
 
     //接続先から問題受信
     fscanf(in, "%d", &pi);
@@ -217,11 +220,12 @@ int echo_client(char *serv, int port) {
 
       for (j = 0; j <= tmp; j += 2) {
         fprintf(out, "%.15e\n%.15e\n", x[j], x[j + 1]);
+        fflush(out);
       }
-      fflush(out);
-      for (; j < n; j++)
+      for (; j < n; j++) {
         fprintf(out, "%.15e\n", x[j]);
-      fflush(out);
+        fflush(out);
+      }
     }
   }
   fclose(in);
